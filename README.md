@@ -16,3 +16,11 @@ Cel
 Ułatwienie znajdowania imprez oraz wydarzeń, ułatwiona promocja wydarzeń niszowych, zwiekszenie liczby osob zainteresowanych ciekawymi wydarzeniami w okolicy.
 
 Technologie:
+
+Uruchomienie:
+1. pobrac
+2. rozpakowac na pulpicie
+3. cd ... (Wybrać folder z zadaniem)
+4. npm install
+5. npm start
+6. dziala 
