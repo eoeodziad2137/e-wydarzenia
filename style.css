@@ -187,6 +187,10 @@ h1 {
   font-size: 20px;
 }
 
+.event-title.cancelled {
+  color: #d32f2f; /* red for cancelled events */
+}
+
 .card p {
   margin: 5px 0;
   font-size: 14px;

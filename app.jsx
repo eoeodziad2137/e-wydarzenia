@@ -119,6 +119,12 @@ function App() {
             const lat = venue?.location?.latitude;
             const lng = venue?.location?.longitude;
             const isHovered = hoveredEventId === ev.id;
+            // some event objects include a status field or nested dates.status.code
+            const cancelled =
+              ev?.status === "cancelled" ||
+              ev?.status === "canceled" ||
+              ev?.dates?.status?.code === "cancelled" ||
+              ev?.dates?.status?.code === "canceled";
 
             return (
               <div
@@ -127,7 +133,9 @@ function App() {
                 onMouseEnter={() => setHoveredEventId(ev.id)}
                 onMouseLeave={() => setHoveredEventId(null)}
               >
-                <h2>{ev.name}</h2>
+                <h2 className={cancelled ? "event-title cancelled" : "event-title"}>
+                  {ev.name}
+                </h2>
                 <p>{ev.dates?.start?.localDate}</p>
                 <p>{venue?.name}</p>
                 {lat && lng && isHovered && (
