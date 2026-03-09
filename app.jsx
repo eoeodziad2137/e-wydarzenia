@@ -47,6 +47,22 @@ function App() {
     setShowLoginPanel(false);
   }
 
+  function handleRegister(e) {
+    e.preventDefault();
+    if (regUsername && regEmail && regPassword && regPasswordConfirm) {
+      if (regPassword !== regPasswordConfirm) {
+        alert("Hasła się nie zgadzają!");
+        return;
+      }
+      setUser({ username: regUsername });
+      setRegUsername("");
+      setRegEmail("");
+      setRegPassword("");
+      setRegPasswordConfirm("");
+      setShowRegisterPanel(false);
+    }
+  }
+
   function fetchEvents(e) {
     e.preventDefault();
     if (!city) return;
@@ -73,12 +89,26 @@ function App() {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => setShowLoginPanel(!showLoginPanel)}
-              className="login-btn"
-            >
-              Zaloguj się
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setShowLoginPanel(!showLoginPanel);
+                  setShowRegisterPanel(false);
+                }}
+                className="login-btn"
+              >
+                Zaloguj się
+              </button>
+              <button
+                onClick={() => {
+                  setShowRegisterPanel(!showRegisterPanel);
+                  setShowLoginPanel(false);
+                }}
+                className="register-btn"
+              >
+                Rejestracja
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -86,6 +116,7 @@ function App() {
       {showLoginPanel && !user && (
         <div className="login-panel">
           <form onSubmit={handleLogin} className="login-form">
+            <h3>Zaloguj się</h3>
             <input
               type="text"
               placeholder="Nazwa użytkownika"
@@ -101,6 +132,49 @@ function App() {
               required
             />
             <button type="submit">Zaloguj</button>
+            <div className="auth-switch">
+              <p>Nie masz konta? <span className="link-btn" onClick={() => {
+                setShowLoginPanel(false);
+                setShowRegisterPanel(true);
+              }}>Zarejestruj się</span></p>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {showRegisterPanel && !user && (
+        <div className="register-panel">
+          <form onSubmit={handleRegister} className="register-form">
+            <h3>Utwórz nowe konto</h3>
+            <input
+              type="text"
+              placeholder="Nazwa użytkownika"
+              value={regUsername}
+              onChange={e => setRegUsername(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={regEmail}
+              onChange={e => setRegEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Hasło"
+              value={regPassword}
+              onChange={e => setRegPassword(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Potwierdź hasło"
+              value={regPasswordConfirm}
+              onChange={e => setRegPasswordConfirm(e.target.value)}
+              required
+            />
+            <button type="submit">Zarejestruj się</button>
           </form>
         </div>
       )}
@@ -141,8 +215,13 @@ function App() {
                 <h2 className={cancelled ? "event-title cancelled" : "event-title"}>
                   {ev.name}
                 </h2>
-                <p>{ev.dates?.start?.localDate}</p>
-                <p>{venue?.name}</p>
+                <div className="event-info">
+                  <p className="event-date"><strong>Data:</strong> {ev.dates?.start?.localDate}</p>
+                  <p className="event-venue"><strong>Miejsce:</strong> {venue?.name}</p>
+                </div>
+                {ev.description && (
+                  <p className="event-description">{ev.description}</p>
+                )}
                 {lat && lng && isHovered && (
                   <MapComponent lat={lat} lng={lng} venueName={venue?.name} />
                 )}
