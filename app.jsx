@@ -25,6 +25,11 @@ function App() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showLoginPanel, setShowLoginPanel] = React.useState(false);
+  const [showRegisterPanel, setShowRegisterPanel] = React.useState(false);
+  const [regUsername, setRegUsername] = React.useState("");
+  const [regEmail, setRegEmail] = React.useState("");
+  const [regPassword, setRegPassword] = React.useState("");
+  const [regPasswordConfirm, setRegPasswordConfirm] = React.useState("");
   const [hoveredEventId, setHoveredEventId] = React.useState(null);
 
   function handleLogin(e) {
