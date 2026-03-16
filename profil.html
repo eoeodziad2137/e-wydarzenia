@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil Użytkownika - e-wydarzenia</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="navbar">
+    <h3>E-Wydarzenia</h3>
+    <div class="login-section">
+      <a href="index.html" class="back-btn">Powrót do głównej</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Profil Użytkownika</h1>
+    <div class="profile-card">
+      <h2>Informacje o użytkowniku</h2>
+      <p><strong>Nazwa użytkownika:</strong> <span id="username">Ładowanie...</span></p>
+      <p><strong>Email:</strong> <span id="email">Ładowanie...</span></p>
+      <p><strong>Data rejestracji:</strong> <span id="registrationDate">Ładowanie...</span></p>
+      <button class="edit-btn">Edytuj profil</button>
+    </div>
+
+    <div class="profile-section">
+      <h2>Ulubione wydarzenia</h2>
+      <p>Brak ulubionych wydarzeń.</p>
+    </div>
+
+    <div class="profile-section">
+      <h2>Historia wyszukiwań</h2>
+      <p>Brak historii wyszukiwań.</p>
+    </div>
+  </div>
+
+  <script>
+    // Prosta symulacja ładowania danych użytkownika
+    document.addEventListener('DOMContentLoaded', function() {
+      // W rzeczywistej aplikacji dane byłyby pobierane z serwera lub localStorage
+      const userData = {
+        username: 'PrzykładUżytkownika',
+        email: 'przyklad@email.com',
+        registrationDate: '2023-10-01'
+      };
+
+      document.getElementById('username').textContent = userData.username;
+      document.getElementById('email').textContent = userData.email;
+      document.getElementById('registrationDate').textContent = userData.registrationDate;
+    });
+  </script>
+</body>
+</html>

@@ -84,6 +84,7 @@ function App() {
           {user ? (
             <div className="user-info">
               <span>Zalogowany: {user.username}</span>
+              <a href="profil.html" className="profile-link">Profil</a>
               <button onClick={handleLogout} className="logout-btn">
                 Wyloguj się
               </button>
