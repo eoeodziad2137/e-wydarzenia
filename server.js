@@ -132,4 +132,4 @@ app.get("/events", (req, res) => {
   });
 });
 
-app.listen(4000, () => console.log("Server działa na http://localhost:4000"));
+app.listen(5000, () => console.log("Server działa na http://localhost:5000"));

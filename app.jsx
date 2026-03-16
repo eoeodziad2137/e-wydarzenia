@@ -1,3 +1,5 @@
+const UserContext = React.createContext();
+
 function MapComponent({ lat, lng, venueName }) {
   const mapContainer = React.useRef(null);
   const map = React.useRef(null);
@@ -30,6 +32,19 @@ function App() {
   const [regPassword, setRegPassword] = React.useState("");
   const [regPasswordConfirm, setRegPasswordConfirm] = React.useState("");
   const [hoveredEventId, setHoveredEventId] = React.useState(null);
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    // Sprawdź sesję na początku
+    fetch('/profile')
+    .then(res => res.json())
+    .then(data => {
+      if (data.username) {
+        setUser({ username: data.username, email: data.email });
+      }
+    })
+    .catch(() => {});
+  }, []);
 
   function handleLogin(e) {
     e.preventDefault();
@@ -42,7 +57,10 @@ function App() {
       .then(res => res.json())
       .then(data => {
         if (data.message === 'Logowanie udane') {
-          window.location.href = 'profil.html';
+          setUser({ username: data.user.username, email: data.user.email });
+          setUsername("");
+          setPassword("");
+          setShowLoginPanel(false);
         } else {
           alert(data.error);
         }
@@ -54,7 +72,7 @@ function App() {
   function handleLogout() {
     fetch('/logout', { method: 'POST' })
     .then(() => {
-      window.location.href = 'index.html';
+      setUser(null);
     })
     .catch(() => alert('Błąd wylogowania'));
   }
@@ -83,17 +101,17 @@ function App() {
           .then(res => res.json())
           .then(loginData => {
             if (loginData.message === 'Logowanie udane') {
-              window.location.href = 'profil.html';
+              setUser({ username: loginData.user.username, email: loginData.user.email });
+              setRegUsername("");
+              setRegEmail("");
+              setRegPassword("");
+              setRegPasswordConfirm("");
+              setShowRegisterPanel(false);
             } else {
               alert('Rejestracja udana, ale błąd logowania: ' + loginData.error);
             }
           })
           .catch(() => alert('Rejestracja udana, ale błąd logowania'));
-          setRegUsername("");
-          setRegEmail("");
-          setRegPassword("");
-          setRegPasswordConfirm("");
-          setShowRegisterPanel(false);
         } else {
           alert(data.error);
         }
@@ -120,24 +138,36 @@ function App() {
       <div className="navbar">
         <h3>E-Wydarzenia</h3>
         <div className="login-section">
-          <button
-            onClick={() => {
-              setShowLoginPanel(!showLoginPanel);
-              setShowRegisterPanel(false);
-            }}
-            className="login-btn"
-          >
-            Zaloguj się
-          </button>
-          <button
-            onClick={() => {
-              setShowRegisterPanel(!showRegisterPanel);
-              setShowLoginPanel(false);
-            }}
-            className="register-btn"
-          >
-            Rejestracja
-          </button>
+          {user ? (
+            <div className="user-info">
+              <span>Zalogowany: {user.username}</span>
+              <a href="profil.html" className="profile-link">Profil</a>
+              <button onClick={handleLogout} className="logout-btn">
+                Wyloguj się
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setShowLoginPanel(!showLoginPanel);
+                  setShowRegisterPanel(false);
+                }}
+                className="login-btn"
+              >
+                Zaloguj się
+              </button>
+              <button
+                onClick={() => {
+                  setShowRegisterPanel(!showRegisterPanel);
+                  setShowLoginPanel(false);
+                }}
+                className="register-btn"
+              >
+                Rejestracja
+              </button>
+            </>
+          )}
         </div>
       </div>
 

@@ -10,28 +10,34 @@
     <h3>E-Wydarzenia</h3>
     <div class="login-section">
       <a href="index.html" class="back-btn">Powrót do głównej</a>
+      <button class="logout-btn" onclick="logout()">Wyloguj się</button>
     </div>
   </div>
 
   <div class="container">
     <h1>Profil Użytkownika</h1>
-    <div class="profile-card">
-      <h2>Informacje o użytkowniku</h2>
-      <p><strong>Nazwa użytkownika:</strong> <span id="username">Ładowanie...</span></p>
-      <p><strong>Email:</strong> <span id="email">Ładowanie...</span></p>
-      <p><strong>Data rejestracji:</strong> <span id="registrationDate">Ładowanie...</span></p>
-      <button class="edit-btn">Edytuj profil</button>
-      <button class="logout-btn" onclick="logout()">Wyloguj się</button>
-    </div>
 
-    <div class="profile-section">
-      <h2>Ulubione wydarzenia</h2>
-      <p>Brak ulubionych wydarzeń.</p>
-    </div>
+    <div class="profile-grid">
+      <div class="profile-sections">
+        <div class="profile-section">
+          <h2>Ulubione wydarzenia</h2>
+          <p>Brak ulubionych wydarzeń.</p>
+        </div>
 
-    <div class="profile-section">
-      <h2>Historia wyszukiwań</h2>
-      <p>Brak historii wyszukiwań.</p>
+        <div class="profile-section">
+          <h2>Opinie</h2>
+          <p>Brak opinii.</p>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <h2>Informacje o użytkowniku</h2>      <div class="profile-avatar">
+        <img id="avatar" src="img/unnamed.png" alt="Awatar użytkownika" />
+      </div>        <p><strong>Nazwa użytkownika:</strong> <span id="username">Ładowanie...</span></p>
+        <p><strong>Email:</strong> <span id="email">Ładowanie...</span></p>
+        <p><strong>Data rejestracji:</strong> <span id="registrationDate">Ładowanie...</span></p>
+        <button class="edit-btn">Edytuj profil</button>
+      </div>
     </div>
   </div>
 
@@ -44,7 +50,21 @@
       .catch(() => alert('Błąd wylogowania'));
     }
 
+    function pickRandomAvatar() {
+      const avatars = [
+        'img/images.jpg',
+        'img/images (1).jpg',
+        'img/images (2).jpg',
+        'img/images (3).jpg',
+        'img/unnamed.png'
+      ];
+      return avatars[Math.floor(Math.random() * avatars.length)];
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // ustaw losowe zdjęcie przed ładowaniem danych
+      document.getElementById('avatar').src = pickRandomAvatar();
+
       fetch('/profile')
       .then(res => res.json())
       .then(data => {
