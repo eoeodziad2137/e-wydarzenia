@@ -21,6 +21,12 @@ const db = new sqlite3.Database('./users.db', (err) => {
       password_hash TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    // Dodaj kolumnę avatar jeśli nie istnieje
+    db.run(`ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT 'img/5.png'`, (err) => {
+      if (err && !err.message.includes('duplicate column name')) {
+        console.error('Błąd dodawania kolumny avatar:', err.message);
+      }
+    });
   }
 });
 
@@ -41,9 +47,12 @@ app.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Wszystkie pola są wymagane' });
   }
 
+  const avatars = ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.png'];
+  const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    db.run('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', [username, email, hashedPassword], function(err) {
+    db.run('INSERT INTO users (username, email, password_hash, avatar) VALUES (?, ?, ?, ?)', [username, email, hashedPassword, randomAvatar], function(err) {
       if (err) {
         if (err.code === 'SQLITE_CONSTRAINT') {
           return res.status(400).json({ error: 'Nazwa użytkownika lub email już istnieje' });
@@ -81,6 +90,7 @@ app.post('/login', (req, res) => {
     req.session.username = user.username;
     req.session.email = user.email;
     req.session.created_at = user.created_at;
+    req.session.avatar = user.avatar;
     res.json({ message: 'Logowanie udane', user: { username: user.username, email: user.email } });
   });
 });
@@ -95,6 +105,55 @@ app.post('/logout', (req, res) => {
   });
 });
 
+// Endpoint aktualizacji profilu
+app.put('/profile', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+
+  const { username, email, password, avatar } = req.body;
+  const updates = [];
+  const values = [];
+
+  if (username) {
+    updates.push('username = ?');
+    values.push(username);
+  }
+  if (email) {
+    updates.push('email = ?');
+    values.push(email);
+  }
+  if (password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    updates.push('password_hash = ?');
+    values.push(hashedPassword);
+  }
+  if (avatar) {
+    updates.push('avatar = ?');
+    values.push(avatar);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'Brak pól do aktualizacji' });
+  }
+
+  values.push(req.session.userId);
+
+  db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values, function(err) {
+    if (err) {
+      if (err.code === 'SQLITE_CONSTRAINT') {
+        return res.status(400).json({ error: 'Nazwa użytkownika lub email już istnieje' });
+      }
+      return res.status(500).json({ error: 'Błąd serwera' });
+    }
+    // Zaktualizuj sesję
+    if (username) req.session.username = username;
+    if (email) req.session.email = email;
+    if (avatar) req.session.avatar = avatar;
+    res.json({ message: 'Profil zaktualizowany' });
+  });
+});
+
 // Endpoint profilu
 app.get('/profile', (req, res) => {
   if (!req.session.userId) {
@@ -103,7 +162,8 @@ app.get('/profile', (req, res) => {
   res.json({
     username: req.session.username,
     email: req.session.email,
-    created_at: req.session.created_at // Możesz dodać więcej pól jeśli potrzebujesz
+    created_at: req.session.created_at,
+    avatar: req.session.avatar
   });
 });
 

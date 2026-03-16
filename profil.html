@@ -32,11 +32,43 @@
 
       <div class="profile-card">
         <h2>Informacje o użytkowniku</h2>      <div class="profile-avatar">
-        <img id="avatar" src="img/unnamed.png" alt="Awatar użytkownika" />
+        <img id="avatar" src="img/5.png" alt="" onerror="this.src=pickRandomAvatar()" />
       </div>        <p><strong>Nazwa użytkownika:</strong> <span id="username">Ładowanie...</span></p>
         <p><strong>Email:</strong> <span id="email">Ładowanie...</span></p>
         <p><strong>Data rejestracji:</strong> <span id="registrationDate">Ładowanie...</span></p>
         <button class="edit-btn">Edytuj profil</button>
+      </div>
+    </div>
+
+    <!-- Modal edycji profilu -->
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edytuj profil</h2>
+        <form id="editForm">
+          <label for="editUsername">Nazwa użytkownika:</label>
+          <input type="text" id="editUsername" name="username" required>
+
+          <label for="editEmail">Email:</label>
+          <input type="email" id="editEmail" name="email" required>
+
+          <label for="editPassword">Nowe hasło:</label>
+          <input type="password" id="editPassword" name="password">
+
+          <label for="editConfirmPassword">Potwierdź hasło:</label>
+          <input type="password" id="editConfirmPassword" name="confirmPassword">
+
+          <label for="editAvatar">Zdjęcie profilowe:</label>
+          <select id="editAvatar" name="avatar">
+            <option value="img/1.jpg">Obraz 1</option>
+            <option value="img/2.jpg">Obraz 2</option>
+            <option value="img/3.jpg">Obraz 3</option>
+            <option value="img/4.jpg">Obraz 4</option>
+            <option value="img/5.png">Obraz 5</option>
+          </select>
+
+          <button type="submit">Zapisz zmiany</button>
+        </form>
       </div>
     </div>
   </div>
@@ -52,11 +84,11 @@
 
     function pickRandomAvatar() {
       const avatars = [
-        'img/images.jpg',
-        'img/images (1).jpg',
-        'img/images (2).jpg',
-        'img/images (3).jpg',
-        'img/unnamed.png'
+        'img/1.jpg',
+        'img/2.jpg',
+        'img/3.jpg',
+        'img/4.jpg',
+        'img/5.png'
       ];
       return avatars[Math.floor(Math.random() * avatars.length)];
     }
@@ -75,6 +107,7 @@
           document.getElementById('username').textContent = data.username;
           document.getElementById('email').textContent = data.email;
           document.getElementById('registrationDate').textContent = new Date(data.created_at).toLocaleDateString('pl-PL');
+          document.getElementById('avatar').src = data.avatar;
         }
       })
       .catch(() => {
@@ -82,6 +115,58 @@
         window.location.href = 'index.html';
       });
     });
+
+    // Modal edycji
+    const modal = document.getElementById('editModal');
+    const editBtn = document.querySelector('.edit-btn');
+    const closeBtn = document.querySelector('.close');
+    const editForm = document.getElementById('editForm');
+
+    editBtn.onclick = function() {
+      modal.style.display = 'block';
+      // Wypełnij formularz
+      document.getElementById('editUsername').value = document.getElementById('username').textContent;
+      document.getElementById('editEmail').value = document.getElementById('email').textContent;
+      document.getElementById('editAvatar').value = document.getElementById('avatar').src.replace(window.location.origin + '/', '');
+    }
+
+    closeBtn.onclick = function() {
+      modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    editForm.onsubmit = function(e) {
+      e.preventDefault();
+      const formData = new FormData(editForm);
+      const data = Object.fromEntries(formData);
+      if (data.password && data.password !== data.confirmPassword) {
+        alert('Hasła się nie zgadzają!');
+        return;
+      }
+      delete data.confirmPassword;
+
+      fetch('/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.message) {
+          alert('Profil zaktualizowany');
+          modal.style.display = 'none';
+          location.reload(); // Odśwież stronę, aby zobaczyć zmiany
+        } else {
+          alert(result.error);
+        }
+      })
+      .catch(() => alert('Błąd aktualizacji'));
+    }
   </script>
 </body>
 </html>
