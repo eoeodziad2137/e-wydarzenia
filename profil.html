@@ -21,6 +21,7 @@
       <p><strong>Email:</strong> <span id="email">Ładowanie...</span></p>
       <p><strong>Data rejestracji:</strong> <span id="registrationDate">Ładowanie...</span></p>
       <button class="edit-btn">Edytuj profil</button>
+      <button class="logout-btn" onclick="logout()">Wyloguj się</button>
     </div>
 
     <div class="profile-section">
@@ -35,18 +36,31 @@
   </div>
 
   <script>
-    // Prosta symulacja ładowania danych użytkownika
-    document.addEventListener('DOMContentLoaded', function() {
-      // W rzeczywistej aplikacji dane byłyby pobierane z serwera lub localStorage
-      const userData = {
-        username: 'PrzykładUżytkownika',
-        email: 'przyklad@email.com',
-        registrationDate: '2023-10-01'
-      };
+    function logout() {
+      fetch('/logout', { method: 'POST' })
+      .then(() => {
+        window.location.href = 'index.html';
+      })
+      .catch(() => alert('Błąd wylogowania'));
+    }
 
-      document.getElementById('username').textContent = userData.username;
-      document.getElementById('email').textContent = userData.email;
-      document.getElementById('registrationDate').textContent = userData.registrationDate;
+    document.addEventListener('DOMContentLoaded', function() {
+      fetch('/profile')
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+          window.location.href = 'index.html';
+        } else {
+          document.getElementById('username').textContent = data.username;
+          document.getElementById('email').textContent = data.email;
+          // Jeśli masz created_at w sesji, dodaj
+        }
+      })
+      .catch(() => {
+        alert('Błąd pobierania profilu');
+        window.location.href = 'index.html';
+      });
     });
   </script>
 </body>

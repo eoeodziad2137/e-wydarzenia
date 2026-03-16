@@ -386,10 +386,27 @@ p {
   font-size: 14px;
   font-weight: 500;
   transition: background 0.3s ease;
+  margin-right: 10px;
 }
 
 .edit-btn:hover {
   background: #0096c7;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #c82333;
 }
 
 .back-btn {

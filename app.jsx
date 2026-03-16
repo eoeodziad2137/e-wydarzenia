@@ -21,7 +21,6 @@ function App() {
   const [city, setCity] = React.useState("");
   const [events, setEvents] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
-  const [user, setUser] = React.useState(null);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showLoginPanel, setShowLoginPanel] = React.useState(false);
@@ -35,16 +34,29 @@ function App() {
   function handleLogin(e) {
     e.preventDefault();
     if (username && password) {
-      setUser({ username });
-      setUsername("");
-      setPassword("");
-      setShowLoginPanel(false);
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message === 'Logowanie udane') {
+          window.location.href = 'profil.html';
+        } else {
+          alert(data.error);
+        }
+      })
+      .catch(() => alert('Błąd logowania'));
     }
   }
 
   function handleLogout() {
-    setUser(null);
-    setShowLoginPanel(false);
+    fetch('/logout', { method: 'POST' })
+    .then(() => {
+      window.location.href = 'index.html';
+    })
+    .catch(() => alert('Błąd wylogowania'));
   }
 
   function handleRegister(e) {
@@ -54,12 +66,39 @@ function App() {
         alert("Hasła się nie zgadzają!");
         return;
       }
-      setUser({ username: regUsername });
-      setRegUsername("");
-      setRegEmail("");
-      setRegPassword("");
-      setRegPasswordConfirm("");
-      setShowRegisterPanel(false);
+      fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: regUsername, email: regEmail, password: regPassword })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message === 'Rejestracja udana') {
+          // Automatyczne logowanie po rejestracji
+          fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: regUsername, password: regPassword })
+          })
+          .then(res => res.json())
+          .then(loginData => {
+            if (loginData.message === 'Logowanie udane') {
+              window.location.href = 'profil.html';
+            } else {
+              alert('Rejestracja udana, ale błąd logowania: ' + loginData.error);
+            }
+          })
+          .catch(() => alert('Rejestracja udana, ale błąd logowania'));
+          setRegUsername("");
+          setRegEmail("");
+          setRegPassword("");
+          setRegPasswordConfirm("");
+          setShowRegisterPanel(false);
+        } else {
+          alert(data.error);
+        }
+      })
+      .catch(() => alert('Błąd rejestracji'));
     }
   }
 
@@ -81,40 +120,28 @@ function App() {
       <div className="navbar">
         <h3>E-Wydarzenia</h3>
         <div className="login-section">
-          {user ? (
-            <div className="user-info">
-              <span>Zalogowany: {user.username}</span>
-              <a href="profil.html" className="profile-link">Profil</a>
-              <button onClick={handleLogout} className="logout-btn">
-                Wyloguj się
-              </button>
-            </div>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  setShowLoginPanel(!showLoginPanel);
-                  setShowRegisterPanel(false);
-                }}
-                className="login-btn"
-              >
-                Zaloguj się
-              </button>
-              <button
-                onClick={() => {
-                  setShowRegisterPanel(!showRegisterPanel);
-                  setShowLoginPanel(false);
-                }}
-                className="register-btn"
-              >
-                Rejestracja
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => {
+              setShowLoginPanel(!showLoginPanel);
+              setShowRegisterPanel(false);
+            }}
+            className="login-btn"
+          >
+            Zaloguj się
+          </button>
+          <button
+            onClick={() => {
+              setShowRegisterPanel(!showRegisterPanel);
+              setShowLoginPanel(false);
+            }}
+            className="register-btn"
+          >
+            Rejestracja
+          </button>
         </div>
       </div>
 
-      {showLoginPanel && !user && (
+      {showLoginPanel && (
         <div className="login-panel">
           <form onSubmit={handleLogin} className="login-form">
             <h3>Zaloguj się</h3>
@@ -143,7 +170,7 @@ function App() {
         </div>
       )}
 
-      {showRegisterPanel && !user && (
+      {showRegisterPanel && (
         <div className="register-panel">
           <form onSubmit={handleRegister} className="register-form">
             <h3>Utwórz nowe konto</h3>
