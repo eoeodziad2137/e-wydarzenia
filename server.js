@@ -80,6 +80,7 @@ app.post('/login', (req, res) => {
     req.session.userId = user.id;
     req.session.username = user.username;
     req.session.email = user.email;
+    req.session.created_at = user.created_at;
     res.json({ message: 'Logowanie udane', user: { username: user.username, email: user.email } });
   });
 });

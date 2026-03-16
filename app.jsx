@@ -136,7 +136,7 @@ function App() {
   return (
     <div>
       <div className="navbar">
-        <h3>E-Wydarzenia</h3>
+        <a href="index.html" className="logo-link">E-Wydarzenia</a>
         <div className="login-section">
           {user ? (
             <div className="user-info">

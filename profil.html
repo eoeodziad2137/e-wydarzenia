@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="navbar">
-    <h3>E-Wydarzenia</h3>
+    <a href="index.html" class="logo-link">E-Wydarzenia</a>
     <div class="login-section">
       <a href="index.html" class="back-btn">Powrót do głównej</a>
       <button class="logout-btn" onclick="logout()">Wyloguj się</button>
@@ -74,7 +74,7 @@
         } else {
           document.getElementById('username').textContent = data.username;
           document.getElementById('email').textContent = data.email;
-          // Jeśli masz created_at w sesji, dodaj
+          document.getElementById('registrationDate').textContent = new Date(data.created_at).toLocaleDateString('pl-PL');
         }
       })
       .catch(() => {
