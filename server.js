@@ -5,8 +5,17 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const app = express();
 
+
 app.use(express.json());
 app.use(express.static(__dirname));
+
+// Sesje
+app.use(session({
+  secret: 'tajny_klucz_sesji',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // W produkcji ustaw na true dla HTTPS
+}));
 
 // Inicjalizacja bazy danych
 const db = new sqlite3.Database('./users.db', (err) => {
@@ -27,7 +36,52 @@ const db = new sqlite3.Database('./users.db', (err) => {
         console.error('Błąd dodawania kolumny avatar:', err.message);
       }
     });
+    // Tabela ulubionych wydarzeń
+    db.run(`CREATE TABLE IF NOT EXISTS favorites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      event_id TEXT NOT NULL,
+      UNIQUE(user_id, event_id),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
   }
+});
+
+// Pobierz ulubione wydarzenia użytkownika
+app.get('/favorites', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+  db.all('SELECT event_id FROM favorites WHERE user_id = ?', [req.session.userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+    res.json(rows.map(r => r.event_id));
+  });
+});
+
+// Dodaj do ulubionych
+app.post('/favorites', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+  const { eventId } = req.body;
+  if (!eventId) return res.status(400).json({ error: 'Brak eventId' });
+  db.run('INSERT OR IGNORE INTO favorites (user_id, event_id) VALUES (?, ?)', [req.session.userId, eventId], function(err) {
+    if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+    res.json({ message: 'Dodano do ulubionych' });
+  });
+});
+
+// Usuń z ulubionych
+app.delete('/favorites', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+  const { eventId } = req.body;
+  if (!eventId) return res.status(400).json({ error: 'Brak eventId' });
+  db.run('DELETE FROM favorites WHERE user_id = ? AND event_id = ?', [req.session.userId, eventId], function(err) {
+    if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+    res.json({ message: 'Usunięto z ulubionych' });
+  });
 });
 
 // Sesje

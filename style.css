@@ -1,3 +1,25 @@
+.empty-info {
+  display: block;
+  color: #0077b6;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+  font-size: 16px;
+}
+.favorite-btn {
+  outline: none;
+  box-shadow: none;
+  transition: color 0.2s;
+}
+.favorite-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+.card h2 {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -267,8 +289,13 @@ h1 {
 .card h2 {
   color: #023e8a;
   margin-top: 0;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   font-size: 20px;
+}
+
+.card > div[style*="display: flex"] {
+  min-height: 32px;
+  align-items: center;
 }
 
 .event-title.cancelled {
@@ -416,6 +443,30 @@ p {
 .profile-section h2 {
   margin-top: 0;
   color: #0077b6;
+}
+
+/* Ulubione wydarzenia - lista z ikoną */
+#favoritesList {
+  list-style: none;
+  padding-left: 0;
+}
+#favoritesList li {
+  position: relative;
+  padding-left: 32px;
+  margin-bottom: 14px;
+  min-height: 28px;
+  background: white;
+  border-radius: 6px;
+}
+#favoritesList li:before {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 18px;
+  height: 18px;
+  background: url('img/li.png') no-repeat center center / contain;
 }
 
 .edit-btn {

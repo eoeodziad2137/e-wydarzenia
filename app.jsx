@@ -33,6 +33,20 @@ function App() {
   const [regPasswordConfirm, setRegPasswordConfirm] = React.useState("");
   const [hoveredEventId, setHoveredEventId] = React.useState(null);
   const [user, setUser] = React.useState(null);
+  const [favorites, setFavorites] = React.useState([]);
+
+  // Pobierz ulubione po zalogowaniu
+  React.useEffect(() => {
+    if (user) {
+      fetch('/favorites', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setFavorites(data);
+        });
+    } else {
+      setFavorites([]);
+    }
+  }, [user]);
 
   React.useEffect(() => {
     // Sprawdź sesję na początku
@@ -270,11 +284,48 @@ function App() {
               mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
             }
 
+            const isFavorite = favorites.includes(ev.id);
             return (
               <div className="card" key={ev.id}>
-                <h2 className={cancelled ? "event-title cancelled" : "event-title"}>
-                  {ev.name}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h2 className={cancelled ? "event-title cancelled" : "event-title"} style={{ margin: 0 }}>
+                    {ev.name}
+                  </h2>
+                  <button
+                    type="button"
+                    className="favorite-btn"
+                    title={isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: isFavorite ? '#e74c3c' : '#aaa', marginLeft: 8 }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (!user) {
+                        alert('Musisz być zalogowany, aby dodać do ulubionych!');
+                        return;
+                      }
+                      if (isFavorite) {
+                        fetch('/favorites', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ eventId: ev.id }),
+                          credentials: 'include'
+                        })
+                          .then(res => res.json())
+                          .then(() => setFavorites(favs => favs.filter(id => id !== ev.id)));
+                      } else {
+                        fetch('/favorites', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ eventId: ev.id }),
+                          credentials: 'include'
+                        })
+                          .then(res => res.json())
+                          .then(() => setFavorites(favs => [...favs, ev.id]));
+                      }
+                    }}
+                  >
+                    <span role="img" aria-label="serce">{isFavorite ? '♥' : '♡'}</span>
+                  </button>
+                </div>
                 <div className="event-info">
                   <p className="event-date"><strong>Data:</strong> {ev.dates?.start?.localDate}</p>
                   <p className="event-venue">

@@ -9,7 +9,6 @@
   <div class="navbar">
     <a href="index.html" class="logo-link">E-Wydarzenia</a>
     <div class="login-section">
-      <a href="index.html" class="back-btn">Powrót do głównej</a>
       <button class="logout-btn" onclick="logout()">Wyloguj się</button>
     </div>
   </div>
@@ -21,7 +20,7 @@
       <div class="profile-sections">
         <div class="profile-section">
           <h2>Ulubione wydarzenia</h2>
-          <p>Brak ulubionych wydarzeń.</p>
+          <div id="favoritesList"><span class="empty-info">Ładowanie...</span></div>
         </div>
 
         <div class="profile-section">
@@ -101,22 +100,99 @@
       document.getElementById('avatar').src = pickRandomAvatar();
 
       fetch('/profile')
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error);
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+            window.location.href = 'index.html';
+          } else {
+            document.getElementById('username').textContent = data.username;
+            document.getElementById('email').textContent = data.email;
+            document.getElementById('registrationDate').textContent = new Date(data.created_at).toLocaleDateString('pl-PL');
+            document.getElementById('avatar').src = data.avatar;
+          }
+        })
+        .catch(() => {
+          alert('Błąd pobierania profilu');
           window.location.href = 'index.html';
-        } else {
-          document.getElementById('username').textContent = data.username;
-          document.getElementById('email').textContent = data.email;
-          document.getElementById('registrationDate').textContent = new Date(data.created_at).toLocaleDateString('pl-PL');
-          document.getElementById('avatar').src = data.avatar;
-        }
-      })
-      .catch(() => {
-        alert('Błąd pobierania profilu');
-        window.location.href = 'index.html';
-      });
+        });
+
+      // Pobierz ulubione wydarzenia i szczegóły z Ticketmaster
+      fetch('/favorites', { credentials: 'include' })
+        .then(res => res.json())
+        .then(async favs => {
+          const list = document.getElementById('favoritesList');
+          list.innerHTML = '';
+          if (Array.isArray(favs) && favs.length > 0) {
+            // Pobierz szczegóły dla każdego eventu
+            const details = await Promise.all(favs.map(async id => {
+              try {
+                const res = await fetch(`https://app.ticketmaster.com/discovery/v2/events/${id}.json?apikey=CAhoJ1QvIdpfnH5HnOy9jnGrQV0ahSMH`);
+                if (!res.ok) return null;
+                const ev = await res.json();
+                return {
+                  id,
+                  name: ev.name,
+                  date: ev.dates?.start?.localDate,
+                  venue: ev._embedded?.venues?.[0]?.name
+                };
+              } catch {
+                return null;
+              }
+            }));
+            const ul = document.createElement('ul');
+            ul.style.listStyle = 'none';
+            ul.style.paddingLeft = '0';
+            details.forEach(ev => {
+              const li = document.createElement('li');
+              if (ev && ev.name) {
+                // Link do mapy Google Maps po nazwie miejsca
+                let mapUrl = '';
+                if (ev.venue) {
+                  mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.venue)}`;
+                }
+                li.innerHTML = `
+                  <span style='color:#e67e22;font-weight:bold;font-size:1.1em;'>${ev.name}</span><br>
+                  <span style='color:#0077b6'>${ev.venue || ''}</span>
+                  ${mapUrl ? `&nbsp;|&nbsp;<a href='${mapUrl}' target='_blank' style='color:#007bff;text-decoration:underline;font-size:0.95em;'>Otwórz mapę</a>` : ''}<br>
+                  <span style='color:#555'>${ev.date || ''}</span>
+                  <button style="margin-left:10px;color:#fff;background:#e74c3c;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.95em;" onclick="removeFavorite('${ev.id}', this)">Usuń</button>
+                `;
+              } else {
+                li.textContent = 'Nie udało się pobrać szczegółów wydarzenia.';
+              }
+              ul.appendChild(li);
+            });
+            list.appendChild(ul);
+            // Funkcja do usuwania ulubionego wydarzenia (globalnie)
+            window.removeFavorite = function(eventId, btn) {
+              fetch('/favorites', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventId }),
+                credentials: 'include'
+              })
+                .then(res => res.json())
+                .then(() => {
+                  // Usuń element z listy
+                  const li = btn.closest('li');
+                  if (li) li.remove();
+                  // Jeśli lista pusta, pokaż info
+                  const list = document.getElementById('favoritesList');
+                  if (!list.querySelector('ul') || list.querySelector('ul').children.length === 0) {
+                    list.innerHTML = '<span class="empty-info">Brak ulubionych wydarzeń.</span>';
+                  }
+                })
+                .catch(() => alert('Błąd usuwania ulubionego wydarzenia.'));
+            }
+          } else {
+            list.innerHTML = '<span class="empty-info">Brak ulubionych wydarzeń.</span>';
+          }
+        })
+        .catch(() => {
+          const list = document.getElementById('favoritesList');
+          list.innerHTML = '<span class="empty-info">Błąd pobierania ulubionych.</span>';
+        });
     });
 
     // Modal edycji
