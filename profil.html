@@ -59,13 +59,16 @@
           <input type="password" id="editConfirmPassword" name="confirmPassword">
 
           <label for="editAvatar">Zdjęcie profilowe:</label>
-          <select id="editAvatar" name="avatar">
-            <option value="img/1.jpg">Obraz 1</option>
-            <option value="img/2.jpg">Obraz 2</option>
-            <option value="img/3.jpg">Obraz 3</option>
-            <option value="img/4.jpg">Obraz 4</option>
-            <option value="img/5.png">Obraz 5</option>
-          </select>
+            <select id="editAvatar" name="avatar">
+              <option value="img/1.jpg">Profilowe 1</option>
+              <option value="img/2.jpg">Profilowe 2</option>
+              <option value="img/3.jpg">Profilowe 3</option>
+              <option value="img/4.jpg">Profilowe 4</option>
+              <option value="img/5.png">Profilowe 5</option>
+            </select>
+            <div style="margin:10px 0;text-align:center;">
+              <img id="avatarPreview" src="img/5.png" alt="Podgląd profilowego" style="max-width:100px;max-height:100px;border-radius:50%;border:1px solid #ccc;" />
+            </div>
 
           <button type="submit">Zapisz zmiany</button>
         </form>
@@ -127,7 +130,8 @@
       // Wypełnij formularz
       document.getElementById('editUsername').value = document.getElementById('username').textContent;
       document.getElementById('editEmail').value = document.getElementById('email').textContent;
-      document.getElementById('editAvatar').value = document.getElementById('avatar').src.replace(window.location.origin + '/', '');
+        document.getElementById('editAvatar').value = document.getElementById('avatar').src.replace(window.location.origin + '/', '');
+        document.getElementById('avatarPreview').src = document.getElementById('avatar').src;
     }
 
     closeBtn.onclick = function() {
@@ -139,6 +143,11 @@
         modal.style.display = 'none';
       }
     }
+
+      // Podgląd profilowego przy zmianie wyboru
+      document.getElementById('editAvatar').addEventListener('change', function() {
+        document.getElementById('avatarPreview').src = this.value;
+      });
 
     editForm.onsubmit = function(e) {
       e.preventDefault();

@@ -255,33 +255,39 @@ function App() {
             const venue = ev._embedded?.venues?.[0];
             const lat = venue?.location?.latitude;
             const lng = venue?.location?.longitude;
-            const isHovered = hoveredEventId === ev.id;
-            // some event objects include a status field or nested dates.status.code
             const cancelled =
               ev?.status === "cancelled" ||
               ev?.status === "canceled" ||
               ev?.dates?.status?.code === "cancelled" ||
               ev?.dates?.status?.code === "canceled";
 
+            // Link do mapy Google Maps po nazwie miejsca
+            let mapUrl = null;
+            if (venue?.name) {
+              const venueQuery = encodeURIComponent(venue.name);
+              mapUrl = `https://www.google.com/maps/search/?api=1&query=${venueQuery}`;
+            } else if (lat && lng) {
+              mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+            }
+
             return (
-              <div
-                className="card"
-                key={ev.id}
-                onMouseEnter={() => setHoveredEventId(ev.id)}
-                onMouseLeave={() => setHoveredEventId(null)}
-              >
+              <div className="card" key={ev.id}>
                 <h2 className={cancelled ? "event-title cancelled" : "event-title"}>
                   {ev.name}
                 </h2>
                 <div className="event-info">
                   <p className="event-date"><strong>Data:</strong> {ev.dates?.start?.localDate}</p>
-                  <p className="event-venue"><strong>Miejsce:</strong> {venue?.name}</p>
+                  <p className="event-venue">
+                    <strong>Miejsce:</strong> {venue?.name}
+                  </p>
+                  {mapUrl && (
+                    <p style={{ margin: 0 }}>
+                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 'normal', fontSize: 'inherit' }}>Otwórz mapę</a>
+                    </p>
+                  )}
                 </div>
                 {ev.description && (
                   <p className="event-description">{ev.description}</p>
-                )}
-                {lat && lng && isHovered && (
-                  <MapComponent lat={lat} lng={lng} venueName={venue?.name} />
                 )}
               </div>
             );
