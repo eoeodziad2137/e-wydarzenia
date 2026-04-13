@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const app = express();
 
+const uploadDb = require("./upload-db");
+
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -16,6 +18,54 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } // W produkcji ustaw na true dla HTTPS
 }));
+
+// Endpoint uploadu avatara jako BLOB do bazy
+app.post('/upload-avatar', uploadDb.single('avatar'), (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+  // Obsługa gotowego avatara (ścieżka string)
+  if (req.body.avatar && typeof req.body.avatar === 'string' && req.body.avatar.startsWith('img/')) {
+    db.run('UPDATE users SET avatar = ? WHERE id = ?', [req.body.avatar, req.session.userId], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Błąd bazy danych' });
+      }
+      req.session.avatar = req.body.avatar;
+      res.json({ message: 'Avatar zaktualizowany', avatar: req.body.avatar });
+    });
+    return;
+  }
+  // Obsługa uploadu pliku (BLOB)
+  if (!req.file) {
+    return res.status(400).json({ error: 'Brak pliku' });
+  }
+  const avatarBuffer = req.file.buffer;
+  db.run('UPDATE users SET avatar = ? WHERE id = ?', [avatarBuffer, req.session.userId], function(err) {
+    if (err) {
+      return res.status(500).json({ error: 'Błąd bazy danych' });
+    }
+    req.session.avatar = `/avatar/${req.session.userId}`;
+    res.json({ message: 'Avatar zaktualizowany', avatar: `/avatar/${req.session.userId}` });
+  });
+});
+
+// Endpoint pobierania avatara jako obrazka
+app.get('/avatar/:userId', (req, res) => {
+  const userId = req.params.userId;
+  db.get('SELECT avatar FROM users WHERE id = ?', [userId], (err, row) => {
+    if (err || !row || !row.avatar) {
+      // domyślna grafika jeśli brak
+      return res.sendFile(__dirname + '/img/5.png');
+    }
+    // Jeśli avatar to string (ścieżka), wyślij plik z dysku
+    if (typeof row.avatar === 'string' && row.avatar.startsWith('img/')) {
+      return res.sendFile(__dirname + '/' + row.avatar);
+    }
+    // W przeciwnym razie traktuj jako BLOB (buffer)
+    res.set('Content-Type', 'image/png');
+    res.send(row.avatar);
+  });
+});
 
 // Inicjalizacja bazy danych
 const db = new sqlite3.Database('./users.db', (err) => {
@@ -214,6 +264,7 @@ app.get('/profile', (req, res) => {
     return res.status(401).json({ error: 'Nie zalogowany' });
   }
   res.json({
+    id: req.session.userId,
     username: req.session.username,
     email: req.session.email,
     created_at: req.session.created_at,

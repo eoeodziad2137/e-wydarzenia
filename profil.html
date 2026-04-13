@@ -5,7 +5,7 @@
   <title>Profil Użytkownika - e-wydarzenia</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-userid="">
   <div class="navbar">
     <a href="index.html" class="logo-link">E-Wydarzenia</a>
     <div class="login-section">
@@ -58,13 +58,16 @@
           <input type="password" id="editConfirmPassword" name="confirmPassword">
 
           <label for="editAvatar">Zdjęcie profilowe:</label>
-            <select id="editAvatar" name="avatar">
+
+            <select id="avatarSelect" name="avatarSelect">
               <option value="img/1.jpg">Profilowe 1</option>
               <option value="img/2.jpg">Profilowe 2</option>
               <option value="img/3.jpg">Profilowe 3</option>
               <option value="img/4.jpg">Profilowe 4</option>
               <option value="img/5.png">Profilowe 5</option>
+              <option value="custom">Własne zdjęcie</option>
             </select>
+            <input type="file" id="editAvatar" name="avatar" accept="image/*" style="display:none; margin-top:8px;" />
             <div style="margin:10px 0;text-align:center;">
               <img id="avatarPreview" src="img/5.png" alt="Podgląd profilowego" style="max-width:100px;max-height:100px;border-radius:50%;border:1px solid #ccc;" />
             </div>
@@ -109,7 +112,15 @@
             document.getElementById('username').textContent = data.username;
             document.getElementById('email').textContent = data.email;
             document.getElementById('registrationDate').textContent = new Date(data.created_at).toLocaleDateString('pl-PL');
-            document.getElementById('avatar').src = data.avatar;
+            // Pobierz avatar jako blob
+            document.body.dataset.userid = data.id;
+            fetch(`/avatar/${data.id}`)
+              .then(r => r.blob())
+              .then(blob => {
+                const url = URL.createObjectURL(blob);
+                document.getElementById('avatar').src = url;
+                document.getElementById('avatarPreview').src = url;
+              });
           }
         })
         .catch(() => {
@@ -203,11 +214,12 @@
 
     editBtn.onclick = function() {
       modal.style.display = 'block';
-      // Wypełnij formularz
       document.getElementById('editUsername').value = document.getElementById('username').textContent;
       document.getElementById('editEmail').value = document.getElementById('email').textContent;
-        document.getElementById('editAvatar').value = document.getElementById('avatar').src.replace(window.location.origin + '/', '');
-        document.getElementById('avatarPreview').src = document.getElementById('avatar').src;
+      document.getElementById('avatarPreview').src = document.getElementById('avatar').src;
+      document.getElementById('avatarSelect').value = '';
+      document.getElementById('editAvatar').value = '';
+      document.getElementById('editAvatar').style.display = 'none';
     }
 
     closeBtn.onclick = function() {
@@ -220,37 +232,87 @@
       }
     }
 
-      // Podgląd profilowego przy zmianie wyboru
-      document.getElementById('editAvatar').addEventListener('change', function() {
-        document.getElementById('avatarPreview').src = this.value;
+      // Obsługa wyboru avatara
+      const avatarSelect = document.getElementById('avatarSelect');
+      const avatarFileInput = document.getElementById('editAvatar');
+      avatarSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+          avatarFileInput.style.display = 'block';
+        } else {
+          avatarFileInput.style.display = 'none';
+          document.getElementById('avatarPreview').src = this.value;
+        }
+      });
+      avatarFileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
       });
 
     editForm.onsubmit = function(e) {
       e.preventDefault();
-      const formData = new FormData(editForm);
-      const data = Object.fromEntries(formData);
-      if (data.password && data.password !== data.confirmPassword) {
-        alert('Hasła się nie zgadzają!');
-        return;
-      }
-      delete data.confirmPassword;
-
-      fetch('/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(result => {
-        if (result.message) {
-          alert('Profil zaktualizowany');
-          modal.style.display = 'none';
-          location.reload(); // Odśwież stronę, aby zobaczyć zmiany
-        } else {
-          alert(result.error);
+      const formData = new FormData();
+      formData.append('username', document.getElementById('editUsername').value);
+      formData.append('email', document.getElementById('editEmail').value);
+      if (document.getElementById('editPassword').value) {
+        if (document.getElementById('editPassword').value !== document.getElementById('editConfirmPassword').value) {
+          alert('Hasła się nie zgadzają!');
+          return;
         }
-      })
-      .catch(() => alert('Błąd aktualizacji'));
+        formData.append('password', document.getElementById('editPassword').value);
+      }
+      let avatarPromise = Promise.resolve();
+      let avatarValue = '';
+      // Pobierz id użytkownika z profilu (potrzebne do /avatar/:id)
+      const userId = document.body.dataset.userid || null;
+      if (avatarSelect.value === 'custom' && avatarFileInput.files[0]) {
+        // Upload własnego pliku
+        const uploadData = new FormData();
+        uploadData.append('avatar', avatarFileInput.files[0]);
+        avatarPromise = fetch('/upload-avatar', {
+          method: 'POST',
+          body: uploadData,
+          credentials: 'include'
+        }).then(res => res.json()).then(result => {
+          if (!result.message) {
+            alert(result.error || 'Błąd uploadu avatara');
+            throw new Error('Upload failed');
+          }
+          // Użyj userId do ścieżki avatara
+          avatarValue = userId ? `/avatar/${userId}` : '';
+        });
+      } else if (avatarSelect.value && avatarSelect.value !== 'custom') {
+        avatarValue = avatarSelect.value;
+      }
+      avatarPromise.then(() => {
+        // Update profilu
+        const data = Object.fromEntries(formData);
+        // Jeśli wybrano gotowy avatar, wyślij avatar w PUT /profile
+        if (avatarSelect.value && avatarSelect.value !== 'custom') {
+          data.avatar = avatarValue;
+        }
+        fetch('/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        })
+        .then(res => res.json())
+        .then(result2 => {
+          if (result2.message) {
+            alert('Profil zaktualizowany');
+            modal.style.display = 'none';
+            location.reload();
+          } else {
+            alert(result2.error);
+          }
+        });
+      });
     }
   </script>
 </body>
