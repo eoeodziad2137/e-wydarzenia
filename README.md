@@ -1,26 +1,31 @@
 # e-wydarzenia
-e-wydarzenia
-Strona poświęcona wydarzeniom w całej Polsce, dzięki której dowiesz się jakie wydarzenia sa w twojej okolicy oraz bedziesz mógł wyrazić opinie na ich temat.
+**e-wydarzenia** to platforma internetowa dedykowana wszystkim osobom poszukującym interesujących wydarzeń w swojej okolicy. Serwis umożliwia szybkie i wygodne przeglądanie aktualnych imprez, koncertów, spotkań oraz inicjatyw lokalnych, a także dzielenie się opiniami na ich temat. Celem projektu jest stworzenie miejsca, które łączy uczestników z organizatorami oraz wspiera promocję zarówno popularnych, jak i niszowych wydarzeń.
 
-Funkcje
-Panel logowania wraz z profilem użytkownika, opiniami oraz interesujacymi go wydarzeniami,
-Ranking wydarzeń, 
-Mapa wydarzeń wraz z adresami gdzie sie odbywają
-Darowizna: bezzwrotna darowizna na rzecz rozwoju strony.
-Pośrednictwo w platnościach za wydarzenia.
+### Funkcje
+Profil użytkownika – rejestracja i logowanie, zarządzanie profilem, zapisywanie ulubionych wydarzeń oraz publikowanie opinii.
+Ranking wydarzeń – zestawienie najlepiej ocenianych i najpopularniejszych wydarzeń w oparciu o filtrowanie i oceny użytkowników.
+Interaktywna mapa – wizualizacja wydarzeń wraz z dokładnymi lokalizacjami, co ułatwia planowanie udziału.
+Pośrednictwo płatności – integracja umożliwiająca wygodne dokonywanie opłat za wybrane wydarzenia.
+System darowizn – możliwość wsparcia rozwoju platformy poprzez dobrowolne, bezzwrotne wpłaty.
 
-Docelowa grupa użytkowników
-Od 1 do lat 100; 
+### Docelowa grupa użytkowników
+Platforma skierowana jest do szerokiego grona odbiorców – praktycznie każdego, kto jest zainteresowany aktywnym spędzaniem czasu, niezależnie od wieku.
 
-Cel
-Ułatwienie znajdowania imprez oraz wydarzeń, ułatwiona promocja wydarzeń niszowych, zwiekszenie liczby osob zainteresowanych ciekawymi wydarzeniami w okolicy.
+### Cel projektu
+Głównym założeniem jest:
+- ułatwienie dostępu do informacji o wydarzeniach lokalnych,
+- zwiększenie widoczności mniej znanych imprez,
+- budowanie zaangażowanej społeczności wokół wydarzeń,
+- wspieranie organizatorów w skutecznej promocji.
 
-Technologie:
-
+### Technologie:
 Uruchomienie:
-1. pobrac
-2. rozpakowac na pulpicie
-3. cd ... (Wybrać folder z zadaniem)
-4. npm install
-5. npm start
-6. dziala 
+1. Pobranie wymaganych komponentów:
+- [git](https://git-scm.com/install/)
+- [node.js](https://nodejs.org/en/download)
+2. W CMD:
+- git clone https://github.com/eoeodziad2137/e-wydarzenia.git
+- npm install
+- npm start
+3. W przeglądarce:
+- [http://localhost:5000](http://localhost:5000) 
