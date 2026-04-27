@@ -25,12 +25,25 @@ Głównym założeniem jest:
 -	integracja z API płatności i map.
 
 ### Uruchomienie:
-**1. Pobranie wymaganych komponentów:**
-     - [git](https://git-scm.com/install/)
-     - [node.js](https://nodejs.org/en/download)
-**2. W CMD:**
-     - git clone https://github.com/eoeodziad2137/e-wydarzenia.git
-     - npm install
-     - npm start
-**3. W przeglądarce:**
-     - [http://localhost:5000](http://localhost:5000) 
+1. **Pobranie wymaganych komponentów:**
+   - [git](https://git-scm.com/install/)
+   - [node.js](https://nodejs.org/en/download)
+2. **W CMD:**
+   - Sklonowanie repozytorium:
+     ```bash
+     git clone https://github.com/eoeodziad2137/e-wydarzenia.git
+     ```
+   - Przejście do katalogu projektu:
+     ```bash
+     cd e-wydarzenia
+     ```
+   - Instalacja zależności:
+     ```bash
+     npm install
+     ```
+   - Uruchomienie aplikacji:
+     ```bash
+     npm start
+     ```
+3. **W przeglądarce:**
+     Otwórz adres: http://localhost:5000
