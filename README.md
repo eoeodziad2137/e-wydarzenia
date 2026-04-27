@@ -18,14 +18,19 @@ Głównym założeniem jest:
 - budowanie zaangażowanej społeczności wokół wydarzeń,
 - wspieranie organizatorów w skutecznej promocji.
 
-### Technologie:
-Uruchomienie:
-1. Pobranie wymaganych komponentów:
-- [git](https://git-scm.com/install/)
-- [node.js](https://nodejs.org/en/download)
-2. W CMD:
-- git clone https://github.com/eoeodziad2137/e-wydarzenia.git
-- npm install
-- npm start
-3. W przeglądarce:
-- [http://localhost:5000](http://localhost:5000) 
+## Technologie:
+-	Frontend: React, HTML, CSS, JavaScript
+-	Backend: Node.js, Express
+-	Baza danych: relacyjna lub NoSQL
+-	integracja z API płatności i map.
+
+### Uruchomienie:
+**1. Pobranie wymaganych komponentów:**
+  - [git](https://git-scm.com/install/)
+  - [node.js](https://nodejs.org/en/download)
+**2. W CMD:**
+  - git clone https://github.com/eoeodziad2137/e-wydarzenia.git
+  - npm install
+  - npm start
+**3. W przeglądarce:**
+  - [http://localhost:5000](http://localhost:5000) 
