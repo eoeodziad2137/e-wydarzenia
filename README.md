@@ -26,11 +26,11 @@ Głównym założeniem jest:
 
 ### Uruchomienie:
 **1. Pobranie wymaganych komponentów:**
-  - [git](https://git-scm.com/install/)
-  - [node.js](https://nodejs.org/en/download)
+     - [git](https://git-scm.com/install/)
+     - [node.js](https://nodejs.org/en/download)
 **2. W CMD:**
-  - git clone https://github.com/eoeodziad2137/e-wydarzenia.git
-  - npm install
-  - npm start
+     - git clone https://github.com/eoeodziad2137/e-wydarzenia.git
+     - npm install
+     - npm start
 **3. W przeglądarce:**
-  - [http://localhost:5000](http://localhost:5000) 
+     - [http://localhost:5000](http://localhost:5000) 
