@@ -1,3 +1,24 @@
+@keyframes move-it {
+  0% {
+    background-position: initial;
+  }
+  100% {
+    background-position: 100px 0px;
+  }
+}
+
+body {  
+  background: repeating-linear-gradient(
+  0.49deg,
+  #0077b6,
+  #0096c7 5%,
+  #0077b6 5%,
+  #0096c7 10%
+);
+  background-size: 100px 100px;
+  animation: move-it 8s linear infinite;
+}
+
 .empty-info {
   display: block;
   color: #0077b6;
@@ -21,9 +42,10 @@
   align-items: center;
 }
 
+
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(120deg, #f0f4ff, #e0f7fa);
   margin: 0;
   color: #333;
 }
@@ -211,7 +233,7 @@ body {
 
 h1 {
   text-align: center;
-  color: #0077b6;
+  color: #ffffff;
   margin-bottom: 30px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
@@ -384,7 +406,6 @@ p {
   color: #0096c7;
 }
 
-/* Profile page styles */
 .profile-grid {
   display: flex;
   gap: 24px;
@@ -445,7 +466,6 @@ p {
   color: #0077b6;
 }
 
-/* Ulubione wydarzenia - lista z ikoną */
 #favoritesList {
   list-style: none;
   padding-left: 0;
@@ -520,7 +540,6 @@ p {
   transform: translateY(-2px);
 }
 
-/* Modal styles */
 .modal {
   display: none;
   position: fixed;
