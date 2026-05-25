@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa wydarzenia</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        .map-title {
+            margin-top: 0;
+            font-size: 1.6rem;
+            text-align: center;
+            color: #222;
+            letter-spacing: 0.5px;
+        }
+        #map {
+            width: 100%;
+            height: 440px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            background: #eee;
+        }
+        @media (max-width: 900px) {
+            .container {
+                max-width: 99vw;
+                padding: 12px 2vw 12px 2vw;
+            }
+            #map {
+                height: 260px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.html" class="logo-link">E-Wydarzenia</a>
+        <div class="login-section" id="login-section"></div>
+    </div>
+    <div class="container">
+        <h1 class="map-title" id="map-title">Lokalizacja wydarzenia</h1>
+        <div id="map"></div>
+    </div>
+    <script>
+                // Dynamiczne sprawdzanie zalogowania przez /profile
+                const loginSection = document.getElementById('login-section');
+                fetch('/profile')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.username) {
+                            loginSection.innerHTML = `
+                                <span class="user-info">Zalogowany: ${data.username}</span>
+                                <a href="profil.html" class="profile-link">Profil</a>
+                                <button class="logout-btn" id="logout-btn">Wyloguj się</button>
+                            `;
+                            document.getElementById('logout-btn').onclick = function() {
+                                fetch('/logout', { method: 'POST' })
+                                    .then(() => window.location.reload());
+                            };
+                        } else {
+                            loginSection.innerHTML = `
+                                <button class="login-btn" onclick="window.location.href='index.html'">Zaloguj się</button>
+                                <button class="register-btn" onclick="window.location.href='index.html'">Rejestracja</button>
+                            `;
+                        }
+                    })
+                    .catch(() => {
+                        loginSection.innerHTML = `
+                            <button class="login-btn" onclick="window.location.href='index.html'">Zaloguj się</button>
+                            <button class="register-btn" onclick="window.location.href='index.html'">Rejestracja</button>
+                        `;
+                    });
+        function getCoords() {
+            const params = new URLSearchParams(window.location.search);
+            const lat = parseFloat(params.get('lat'));
+            const lng = parseFloat(params.get('lng'));
+            const venue = params.get('venue');
+            return { lat, lng, venue };
+        }
+        const coords = getCoords();
+        const mapDiv = document.getElementById('map');
+        const mapTitle = document.getElementById('map-title');
+        function isPoland(lat, lng) {
+            return lat >= 49 && lat <= 55 && lng >= 14 && lng <= 24;
+        }
+        if (coords.venue) {
+            mapTitle.textContent = coords.venue;
+        }
+        if (!isNaN(coords.lat) && !isNaN(coords.lng) && isPoland(coords.lat, coords.lng)) {
+            // Google Maps iframe
+            const iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.style.border = '0';
+            iframe.loading = 'lazy';
+            iframe.allowFullscreen = true;
+            iframe.referrerPolicy = 'no-referrer-when-downgrade';
+            iframe.src = `https://www.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`;
+            mapDiv.appendChild(iframe);
+        } else {
+            mapDiv.innerHTML = '<p style="text-align:center;margin-top:2em;">Brak poprawnej lokalizacji w Polsce do wyświetlenia mapy.</p>';
+        }
+    </script>
+</body>
+</html>

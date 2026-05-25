@@ -134,9 +134,27 @@ function App() {
     }
   }
 
+  // Przywróć ostatnie wyszukiwanie miasta z localStorage
+  React.useEffect(() => {
+    const lastCity = localStorage.getItem('lastCity');
+    if (lastCity) {
+      setCity(lastCity);
+      // Automatycznie pobierz wydarzenia dla zapamiętanego miasta
+      setLoading(true);
+      fetch(`/events?city=${encodeURIComponent(lastCity)}`)
+        .then(res => res.json())
+        .then(data => {
+          setEvents(data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, []);
+
   function fetchEvents(e) {
     e.preventDefault();
     if (!city) return;
+    localStorage.setItem('lastCity', city);
     setLoading(true);
     fetch(`/events?city=${encodeURIComponent(city)}`)
       .then(res => res.json())
@@ -275,13 +293,17 @@ function App() {
               ev?.dates?.status?.code === "cancelled" ||
               ev?.dates?.status?.code === "canceled";
 
-            // Link do mapy Google Maps po nazwie miejsca
+            // Link do naszej mapy z pinezką tylko dla lokalizacji w Polsce
             let mapUrl = null;
-            if (venue?.name) {
+            function isPoland(lat, lng) {
+              return lat >= 49 && lat <= 55 && lng >= 14 && lng <= 24;
+            }
+            if (lat && lng && isPoland(lat, lng)) {
+              const venueParam = venue?.name ? `&venue=${encodeURIComponent(venue.name)}` : '';
+              mapUrl = `map.html?lat=${lat}&lng=${lng}${venueParam}`;
+            } else if (venue?.name) {
               const venueQuery = encodeURIComponent(venue.name);
               mapUrl = `https://www.google.com/maps/search/?api=1&query=${venueQuery}`;
-            } else if (lat && lng) {
-              mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
             }
 
             const isFavorite = favorites.includes(ev.id);
@@ -333,7 +355,7 @@ function App() {
                   </p>
                   {mapUrl && (
                     <p style={{ margin: 0 }}>
-                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 'normal', fontSize: 'inherit' }}>Otwórz mapę</a>
+                      <a href={mapUrl} style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 'normal', fontSize: 'inherit' }}>Otwórz mapę</a>
                     </p>
                   )}
                 </div>
