@@ -94,6 +94,16 @@ const db = new sqlite3.Database('./users.db', (err) => {
       UNIQUE(user_id, event_id),
       FOREIGN KEY(user_id) REFERENCES users(id)
     )`);
+    // Tabela opinii pod wydarzeniami
+    db.run(`CREATE TABLE IF NOT EXISTS reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      event_id TEXT NOT NULL,
+      event_name TEXT NOT NULL,
+      opinion TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
   }
 });
 
@@ -131,6 +141,66 @@ app.delete('/favorites', (req, res) => {
   db.run('DELETE FROM favorites WHERE user_id = ? AND event_id = ?', [req.session.userId, eventId], function(err) {
     if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
     res.json({ message: 'Usunięto z ulubionych' });
+  });
+});
+
+// Pobierz opinie dla konkretnego wydarzenia
+app.get('/reviews', (req, res) => {
+  const { eventId } = req.query;
+  if (!eventId) {
+    return res.status(400).json({ error: 'Brak eventId' });
+  }
+
+  db.all(`
+    SELECT r.id, r.event_id, r.event_name, r.opinion, r.created_at, u.username
+    FROM reviews r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.event_id = ?
+    ORDER BY r.created_at DESC
+  `, [eventId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+    res.json(rows);
+  });
+});
+
+// Dodaj opinię do wydarzenia
+app.post('/reviews', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+
+  const { eventId, eventName, opinion } = req.body;
+  if (!eventId || !eventName || !opinion || !opinion.trim()) {
+    return res.status(400).json({ error: 'Brak wymaganych danych' });
+  }
+
+  db.run(
+    'INSERT INTO reviews (user_id, event_id, event_name, opinion) VALUES (?, ?, ?, ?)',
+    [req.session.userId, eventId, eventName, opinion.trim()],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+      db.get('SELECT r.*, u.username FROM reviews r JOIN users u ON u.id = r.user_id WHERE r.id = ?', [this.lastID], (err2, row) => {
+        if (err2 || !row) return res.status(500).json({ error: 'Błąd pobierania opinii' });
+        res.json({ message: 'Opinia dodana', review: row });
+      });
+    }
+  );
+});
+
+// Pobierz opinie zalogowanego użytkownika
+app.get('/my-reviews', (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Nie zalogowany' });
+  }
+
+  db.all(`
+    SELECT r.id, r.event_id, r.event_name, r.opinion, r.created_at
+    FROM reviews r
+    WHERE r.user_id = ?
+    ORDER BY r.created_at DESC
+  `, [req.session.userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Błąd bazy danych' });
+    res.json(rows);
   });
 });
 

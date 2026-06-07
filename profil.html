@@ -25,7 +25,7 @@
 
         <div class="profile-section">
           <h2>Opinie</h2>
-          <p>Brak opinii.</p>
+          <div id="opinionsList"><span class="empty-info">Ładowanie...</span></div>
         </div>
       </div>
 
@@ -126,6 +126,55 @@
         .catch(() => {
           alert('Błąd pobierania profilu');
           window.location.href = 'index.html';
+        });
+
+      fetch('/my-reviews', { credentials: 'include' })
+        .then(res => res.json())
+        .then(async reviews => {
+          const list = document.getElementById('opinionsList');
+          list.innerHTML = '';
+          if (Array.isArray(reviews) && reviews.length > 0) {
+            const details = await Promise.all(reviews.map(async review => {
+              try {
+                const res = await fetch(`https://app.ticketmaster.com/discovery/v2/events/${review.event_id}.json?apikey=CAhoJ1QvIdpfnH5HnOy9jnGrQV0ahSMH`);
+                if (!res.ok) return { ...review, date: '', venue: '', mapUrl: '' };
+                const ev = await res.json();
+                const venue = ev._embedded?.venues?.[0]?.name || '';
+                const mapUrl = venue ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}` : '';
+                return {
+                  ...review,
+                  date: ev.dates?.start?.localDate || '',
+                  venue,
+                  mapUrl
+                };
+              } catch {
+                return { ...review, date: '', venue: '', mapUrl: '' };
+              }
+            }));
+
+            details.forEach(review => {
+              const item = document.createElement('article');
+              item.className = 'opinion-card';
+              const meta = [
+                review.date ? `Data: ${review.date}` : '',
+                review.venue ? `Miejsce: ${review.venue}` : '',
+                review.mapUrl ? `<a href='${review.mapUrl}' target='_blank' style='color:#007bff;text-decoration:underline;'>Otwórz mapę</a>` : ''
+              ].filter(Boolean).join(' · ');
+
+              item.innerHTML = `
+                <strong>${review.event_name || 'Wydarzenie'}</strong>
+                <p>${review.opinion}</p>
+                <small>${meta}</small>
+                <div style="margin-top:4px;color:#64748b;font-size:0.92em;">Opinie dodano: ${new Date(review.created_at).toLocaleString('pl-PL')}</div>
+              `;
+              list.appendChild(item);
+            });
+          } else {
+            list.innerHTML = '<span class="empty-info">Brak opinii.</span>';
+          }
+        })
+        .catch(() => {
+          document.getElementById('opinionsList').innerHTML = '<span class="empty-info">Błąd pobierania opinii.</span>';
         });
 
       // Pobierz ulubione wydarzenia i szczegóły z Ticketmaster

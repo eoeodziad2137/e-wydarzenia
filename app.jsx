@@ -34,6 +34,8 @@ function App() {
   const [hoveredEventId, setHoveredEventId] = React.useState(null);
   const [user, setUser] = React.useState(null);
   const [favorites, setFavorites] = React.useState([]);
+  const [reviews, setReviews] = React.useState({});
+  const [reviewDrafts, setReviewDrafts] = React.useState({});
 
   // Pobierz ulubione po zalogowaniu
   React.useEffect(() => {
@@ -50,7 +52,7 @@ function App() {
 
   React.useEffect(() => {
     // Sprawdź sesję na początku
-    fetch('/profile')
+    fetch('/profile', { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       if (data.username) {
@@ -66,7 +68,8 @@ function App() {
       fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        credentials: 'include'
       })
       .then(res => res.json())
       .then(data => {
@@ -84,7 +87,7 @@ function App() {
   }
 
   function handleLogout() {
-    fetch('/logout', { method: 'POST' })
+    fetch('/logout', { method: 'POST', credentials: 'include' })
     .then(() => {
       setUser(null);
     })
@@ -101,7 +104,8 @@ function App() {
       fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: regUsername, email: regEmail, password: regPassword })
+        body: JSON.stringify({ username: regUsername, email: regEmail, password: regPassword }),
+        credentials: 'include'
       })
       .then(res => res.json())
       .then(data => {
@@ -110,7 +114,8 @@ function App() {
           fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: regUsername, password: regPassword })
+            body: JSON.stringify({ username: regUsername, password: regPassword }),
+            credentials: 'include'
           })
           .then(res => res.json())
           .then(loginData => {
@@ -164,6 +169,63 @@ function App() {
       })
       .catch(() => setLoading(false));
   }
+
+  function fetchEventReviews(eventId) {
+    if (!eventId) return;
+    fetch(`/reviews?eventId=${encodeURIComponent(eventId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setReviews(prev => ({ ...prev, [eventId]: data }));
+        }
+      })
+      .catch(() => {});
+  }
+
+  function handleReviewSubmit(e, ev) {
+    e.preventDefault();
+    if (!user) {
+      alert('Musisz być zalogowany, aby dodać opinię.');
+      return;
+    }
+
+    const text = (reviewDrafts[ev.id] || '').trim();
+    if (!text) {
+      alert('Wpisz treść opinii.');
+      return;
+    }
+
+    fetch('/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId: ev.id, eventName: ev.name, opinion: text }),
+      credentials: 'include'
+    })
+      .then(res => {
+        if (!res.ok) return res.json().then(err => Promise.reject(err));
+        return res.json();
+      })
+      .then(data => {
+        if (data.message) {
+          setReviewDrafts(prev => ({ ...prev, [ev.id]: '' }));
+          setReviews(prev => ({
+            ...prev,
+            [ev.id]: [data.review, ...(prev[ev.id] || [])]
+          }));
+        } else {
+          alert(data.error || 'Nie udało się dodać opinii.');
+        }
+      })
+      .catch(() => alert('Błąd dodawania opinii.'));
+  }
+
+  React.useEffect(() => {
+    events.forEach(ev => {
+      if (ev?.id && !reviews[ev.id]) {
+        fetchEventReviews(ev.id);
+      }
+    });
+  }, [events]);
 
   return (
     <div>
@@ -354,7 +416,7 @@ function App() {
                     <strong>Miejsce:</strong> {venue?.name}
                   </p>
                   {mapUrl && (
-                    <p style={{ margin: 0 }}>
+                    <p style={{ margin: '8px 0 0' }}>
                       <a href={mapUrl} style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 'normal', fontSize: 'inherit' }}>Otwórz mapę</a>
                     </p>
                   )}
@@ -362,6 +424,33 @@ function App() {
                 {ev.description && (
                   <p className="event-description">{ev.description}</p>
                 )}
+
+                <div className="review-section">
+                  <h3 className="review-heading">Opinie</h3>
+                  <form className="review-form" onSubmit={e => handleReviewSubmit(e, ev)}>
+                    <textarea
+                      rows="3"
+                      value={reviewDrafts[ev.id] || ''}
+                      onChange={e => setReviewDrafts(prev => ({ ...prev, [ev.id]: e.target.value }))}
+                      placeholder={user ? 'Napisz swoją opinię o wydarzeniu...' : 'Zaloguj się, aby dodać opinię'}
+                      disabled={!user}
+                    />
+                    <button type="submit" disabled={!user}>Dodaj opinię</button>
+                  </form>
+                  <div className="review-list">
+                    {(reviews[ev.id] || []).length > 0 ? (
+                      reviews[ev.id].map(review => (
+                        <article className="review-item" key={review.id}>
+                          <strong>{review.username || 'Użytkownik'}</strong>
+                          <p>{review.opinion}</p>
+                          <small>{new Date(review.created_at).toLocaleString('pl-PL')}</small>
+                        </article>
+                      ))
+                    ) : (
+                      <p className="empty-info">Brak opinii dla tego wydarzenia.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
